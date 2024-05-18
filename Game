@@ -10,6 +10,7 @@ window = display.set_mode((700,500))
 display.set_caption("Touch Coin") 
 background = transform.scale(image.load("fon1.png"), (700, 500)) 
 figgers = 0
+collisions = 0
 
 class GameSprite(sprite.Sprite): 
     def __init__(self, player_image, player_x, player_y, size_x, size_y): 
@@ -47,12 +48,20 @@ class Coin(GameSprite):
         self.rect.x = player_x
         self.rect.y = player_y
         self.speed = speed
+        self.window_width = 700
+        self.window_height = 500
 
     def update(self, dx, dy):  # Update the coin's position based on dx and dy
-        self.rect.x += dx * self.speed
-        self.rect.y += dy * self.speed
+        new_x = self.rect.x + dx * self.speed
+        new_y = self.rect.y + dy * self.speed
+        # Constrain the movement within the window boundaries
+        if 0 <= new_x <= self.window_width - self.rect.width:
+            self.rect.x = new_x
+        if 0 <= new_y <= self.window_height - self.rect.height:
+            self.rect.y = new_y
+
     def colliderect(self,rect):
-        return self.colliderect(rect) 
+        return self.rect.colliderect(rect) 
         
 
 class Figure(): 
@@ -74,38 +83,31 @@ def draw_text(surface, text, size, x, y, color):
     surface.blit(text_surface, text_rect) 
     
 run = True 
-Coins = GameSprite("coin.png",200,100,300,300)
-Coiin = Coin("coin.png",300,200,50,50,3)  # Define smaller coin with speed
-obstacles = [
-    Obstacle(650,200,10,100,0,(0,0,0)),
-    Obstacle(650,300,10,100,0,(0,0,0)),
-    Obstacle(650,400,10,100,0,(0,0,0)),
-]  # List to store obstacles
-  # Add obstacles to the list
+Coins = GameSprite("Coin.jpg",200,100,300,300)
+Coiin = Coin("Coin.jpg",300,200,50,50,3)  # Define smaller coin with speed
+obstacles = [Obstacle(650,100,10,500,0,(0,0,0)), Obstacle(800,0,10,300,0,(0,0,0))]
+ # List to store obstacles
 
 g = 100
 Y = False
+
 while run:
+ 
     window.blit(background, (0, 0))
     Coiin.draw()
     Coins.draw()
     
-   
-
     for e in event.get():
         if e.type == QUIT:
             run = False
         if e.type == MOUSEBUTTONDOWN:
             x,y = e.pos
             figgers +=1
-            
-            
             if Coins.collidepoint(x,y):
                 figure = Figure("figure.png",x,y,50,100,0)
                 figure.draw()
             if figgers > 100:
                 Y = True
-
             if figgers == 100 :
                 Coins.rect.x = -800 
 
@@ -127,11 +129,16 @@ while run:
 
     if figgers < 100:                   
         draw_text(window, f"Кількість натисків: {figgers}/{g}", 30, 10, 10, (255, 255, 255))
+   
     if Y:
         for obstacle in obstacles:  # Draw obstacles
             obstacle.draw()
             obstacle.move()
             if Coiin.colliderect(obstacle.rect):
                 Coiin.rect.x = 100
+                collisions+=1
+                for obs in obstacles:  # Reset all obstacles positions
+                    obs.rect.x = 650
+        draw_text(window, f"Кількість зіткнень: {collisions}/2", 30, 10, 50, (255, 255, 255))
     display.update()
     time.delay(17)
