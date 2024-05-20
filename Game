@@ -4,141 +4,137 @@ from random import randint
 # Initialize Pygame
 init()
 
-win_width = 700 
-win_height = 500 
-window = display.set_mode((700,500)) 
-display.set_caption("Touch Coin") 
-background = transform.scale(image.load("fon1.png"), (700, 500)) 
+win_width = 700
+win_height = 500
+window = display.set_mode((win_width, win_height))
+display.set_caption("Touch Coin")
+background = transform.scale(image.load("fon1.png"), (win_width, win_height))
 figgers = 0
 collisions = 0
+game_over = False
 
-class GameSprite(sprite.Sprite): 
-    def __init__(self, player_image, player_x, player_y, size_x, size_y): 
-        sprite.Sprite.__init__(self) 
+class GameSprite(sprite.Sprite):
+    def __init__(self, player_image, player_x, player_y, size_x, size_y):
+        sprite.Sprite.__init__(self)
         self.image = transform.scale(image.load(player_image), (size_x, size_y))
         self.rect = self.image.get_rect()
         self.rect.x = player_x
         self.rect.y = player_y
-    def collidepoint(self, x,y):
-        return self.rect.collidepoint(x,y)
+
+    def collidepoint(self, x, y):
+        return self.rect.collidepoint(x, y)
+
     def draw(self):
         window.blit(self.image, (self.rect.x, self.rect.y))
 
 class Obstacle(sprite.Sprite):
     def __init__(self, player_x, player_y, size_x, size_y, speed, color):
         sprite.Sprite.__init__(self)
-        self.image = Surface((size_x, size_y))  # Create a surface with the given size
-        self.image.fill(color)  # Fill the surface with the specified color
+        self.image = Surface((size_x, size_y))
+        self.image.fill(color)
         self.rect = self.image.get_rect()
         self.rect.x = player_x
         self.rect.y = player_y
         self.speed = speed
+
     def draw(self):
         window.blit(self.image, (self.rect.x, self.rect.y))
+
     def move(self):
-        self.rect.x -= 1
-        
+        self.rect.x -= self.speed
 
-
-class Coin(GameSprite): 
-    def __init__(self, player_image, player_x, player_y, size_x, size_y, speed): 
-        sprite.Sprite.__init__(self) 
-        self.image = transform.scale(image.load(player_image), (size_x, size_y))
-        self.rect = self.image.get_rect()
-        self.rect.x = player_x
-        self.rect.y = player_y
+class Coin(GameSprite):
+    def __init__(self, player_image, player_x, player_y, size_x, size_y, speed):
+        super().__init__(player_image, player_x, player_y, size_x, size_y)
         self.speed = speed
-        self.window_width = 700
-        self.window_height = 500
+        self.window_width = win_width
+        self.window_height = win_height
 
-    def update(self, dx, dy):  # Update the coin's position based on dx and dy
+    def update(self, dx, dy):
         new_x = self.rect.x + dx * self.speed
         new_y = self.rect.y + dy * self.speed
-        # Constrain the movement within the window boundaries
         if 0 <= new_x <= self.window_width - self.rect.width:
             self.rect.x = new_x
         if 0 <= new_y <= self.window_height - self.rect.height:
             self.rect.y = new_y
 
-    def colliderect(self,rect):
-        return self.rect.colliderect(rect) 
-        
+def draw_text(surface, text, size, x, y, color):
+    fonts = font.SysFont('verdana', size)
+    text_surface = fonts.render(text, True, color)
+    text_rect = text_surface.get_rect()
+    text_rect.topleft = (x, y)
+    surface.blit(text_surface, text_rect)
 
-class Figure(): 
-    def __init__(self, player_image, player_x, player_y, size_x, size_y, speed): 
-        self.image = transform.scale(image.load(player_image), (size_x, size_y)) 
-        self.rect = self.image.get_rect() 
-        self.rect.x = player_x 
-        self.rect.y = player_y 
-        self.speed = speed
-
-    def draw(self):
-        window.blit(self.image, (self.rect.x, self.rect.y))
-
-def draw_text(surface, text, size, x, y, color): 
-    fonts = font.SysFont('verdana', size) 
-    text_surface = fonts.render(text, True, color) 
-    text_rect = text_surface.get_rect() 
-    text_rect.topleft = (x, y) 
-    surface.blit(text_surface, text_rect) 
-    
-run = True 
-Coins = GameSprite("Coin.jpg",200,100,300,300)
-Coiin = Coin("Coin.jpg",300,200,50,50,3)  # Define smaller coin with speed
-obstacles = [Obstacle(650,100,10,500,0,(0,0,0)), Obstacle(800,0,10,300,0,(0,0,0))]
- # List to store obstacles
+run = True
+Coins = GameSprite("coin.png", 200, 100, 300, 300)
+Coiin = Coin("coin.png", 300, 200, 50, 50, 3)
+obstacles = [
+    Obstacle(650, 100, 10, 500, 2, (0, 0, 0)),
+    Obstacle(800, 0, 10, 300, 2, (0, 0, 0)),
+    Obstacle(950, 100, 10, 500, 2, (0, 0, 0)),
+    Obstacle(1100, 0, 10, 300, 2, (0, 0, 0)),
+]
 
 g = 100
 Y = False
 
 while run:
- 
-    window.blit(background, (0, 0))
-    Coiin.draw()
-    Coins.draw()
-    
-    for e in event.get():
-        if e.type == QUIT:
-            run = False
-        if e.type == MOUSEBUTTONDOWN:
-            x,y = e.pos
-            figgers +=1
-            if Coins.collidepoint(x,y):
-                figure = Figure("figure.png",x,y,50,100,0)
-                figure.draw()
-            if figgers > 100:
-                Y = True
-            if figgers == 100 :
-                Coins.rect.x = -800 
+    if game_over:
+        window.fill((255, 0, 0))  # Fill the screen with red
+        draw_text(window, "Game Over", 50, win_width // 2 - 100, win_height // 2 - 25, (255, 255, 255))
+        display.update()
+        time.wait(2000)  # Wait for 2 seconds
+        run = False
+    else:
+        window.blit(background, (0, 0))
+        Coiin.draw()
+        Coins.draw()
 
-    # Check for keypress events
-    keys = key.get_pressed()
-    dx = 0
-    dy = 0
-    if keys[K_LEFT]:
-        dx = -1
-    if keys[K_RIGHT]:
-        dx = 1
-    if keys[K_UP]:
-        dy = -1
-    if keys[K_DOWN]:
-        dy = 1
+        for e in event.get():
+            if e.type == QUIT:
+                run = False
+            if e.type == MOUSEBUTTONDOWN:
+                x, y = e.pos
+                figgers += 1
+                if Coins.collidepoint(x, y):
+                    figure = GameSprite("figure.png", x, y, 50, 100)
+                    figure.draw()
+                if figgers > 100:
+                    Y = True
+                if figgers == 100:
+                    Coins.rect.x = -800
 
-    # Update the position of the smaller coin
-    Coiin.update(dx, dy)
+        keys = key.get_pressed()
+        dx = 0
+        dy = 0
+        if keys[K_LEFT]:
+            dx = -1
+        if keys[K_RIGHT]:
+            dx = 1
+        if keys[K_UP]:
+            dy = -1
+        if keys[K_DOWN]:
+            dy = 1
 
-    if figgers < 100:                   
-        draw_text(window, f"Кількість натисків: {figgers}/{g}", 30, 10, 10, (255, 255, 255))
-   
-    if Y:
-        for obstacle in obstacles:  # Draw obstacles
-            obstacle.draw()
-            obstacle.move()
-            if Coiin.colliderect(obstacle.rect):
-                Coiin.rect.x = 100
-                collisions+=1
-                for obs in obstacles:  # Reset all obstacles positions
-                    obs.rect.x = 650
-        draw_text(window, f"Кількість зіткнень: {collisions}/2", 30, 10, 50, (255, 255, 255))
+        Coiin.update(dx, dy)
+
+        if figgers < 100:
+            draw_text(window, f"Кількість натисків: {figgers}/{g}", 30, 10, 10, (255, 255, 255))
+
+        if Y:
+            for obstacle in obstacles:
+                obstacle.draw()
+                obstacle.move()
+                if Coiin.rect.colliderect(obstacle.rect):
+                    Coiin.rect.x = 100
+                    collisions += 1
+                    for obs in obstacles:
+                        obs.rect.x = 650 if obs == obstacles[0] else 800 if obs == obstacles[1] else 950 if obs == obstacles[2] else 1100
+                    if collisions == 3:
+                        game_over = True
+            draw_text(window, f"Кількість зіткнень: {collisions}/3", 30, 10, 10, (255, 255, 255))
+
     display.update()
     time.delay(17)
+
+quit()
