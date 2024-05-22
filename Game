@@ -69,7 +69,7 @@ run = True
 Coins = GameSprite("coin.png", 200, 100, 300, 300)
 Coiin = Coin("coin.png", 300, 200, 50, 50, 4)
 obstacle_speed = 2
-trausers = GameSprite("trauser1.png", 400, 200, 50, 50)  # Set initial position within the window
+trausers = GameSprite("trauser1.png", 400, 200, 100, 80)  # Set initial position within the window
 obstacles = [
     Obstacle(650, 100, 10, 500, obstacle_speed, (0, 0, 0)),
     Obstacle(800, 0, 10, 370, obstacle_speed, (0, 0, 0)),
