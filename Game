@@ -1,6 +1,7 @@
 from pygame import *
+from random import randint
 
-# Initialize Pygame
+# Ініціалізуємо Pygame
 init()
 
 win_width = 700
@@ -11,7 +12,7 @@ background = transform.scale(image.load("fon1.png"), (win_width, win_height))
 figgers = 0
 collisions = 0
 game_over = False
-game_win = False  # Variable to track if the player has won
+game_win = False  # Змінна для відстеження перемоги гравця
 
 class GameSprite(sprite.Sprite):
     def __init__(self, player_image, player_x, player_y, size_x, size_y):
@@ -69,7 +70,7 @@ run = True
 Coins = GameSprite("coin.png", 200, 100, 300, 300)
 Coiin = Coin("coin.png", 300, 200, 50, 50, 4)
 obstacle_speed = 2
-trausers = GameSprite("trauser1.png", 400, 200, 100, 80)  # Set initial position within the window
+trausers = GameSprite("trauser1.png", 400, 200, 100, 80)  # Початкове положення вікна
 obstacles = [
     Obstacle(650, 100, 10, 500, obstacle_speed, (0, 0, 0)),
     Obstacle(800, 0, 10, 370, obstacle_speed, (0, 0, 0)),
@@ -80,7 +81,9 @@ obstacles = [
 
 g = 100
 Y = False
-trausers_visible = False  # Variable to track trausers visibility
+trausers_visible = False  # Змінна для відстеження видимості траузерів
+
+figure = None  # Ініціалізуємо фігуру поза основним циклом подій
 
 while run:
     for e in event.get():
@@ -90,24 +93,23 @@ while run:
             x, y = e.pos
             figgers += 1
             if Coins.collidepoint(x, y):
-                figure = GameSprite("figure.png", x, y, 50, 100)
-                figure.draw()
+                figure = GameSprite("figure.png", x, y, 50, 100)  # Створюємо спрайт фігури
             if figgers > 100:
                 Y = True
             if figgers == 100:
                 Coins.rect.x = -800
 
     if game_over:
-        window.blit(background, (0, 0))  # Keep the background image
+        window.blit(background, (0, 0))  # Зберігаємо фонове зображення
         draw_text(window, "Проїграш", 50, win_width // 2 - 100, win_height // 2 - 25, (255, 255, 255))
         display.update()
-        time.wait(2000)  # Wait for 2 seconds
+        time.wait(2000)  # Чекаємо 2 секунди
         run = False
     elif game_win:
-        window.blit(background, (0, 0))  # Keep the background image
-        draw_text(window, "Ви виграли,11000 Touch Coins!", 40, win_width // 2 - 300, win_height // 2 - 25, (0, 0, 0))
+        window.blit(background, (0, 0))  # Зберігаємо фонове зображення
+        draw_text(window, "Ви виграли, 11000 Touch Coins!", 40, win_width // 2 - 300, win_height // 2 - 25, (0, 0, 0))
         display.update()
-        time.wait(3000)  # Wait for 2 seconds
+        time.wait(3000)  # Чекаємо 3 секунди
         run = False
     else:
         window.blit(background, (0, 0))
@@ -130,13 +132,15 @@ while run:
 
         if figgers < 100:
             draw_text(window, f"Кількість натисків: {figgers}/{g}", 30, 10, 10, (255, 255, 255))
+        if figgers > 100:
+            figure = None
 
         if Y:
             for obstacle in obstacles:
                 obstacle.draw()
                 obstacle.move()
                 
-                # Check if Coiin has passed all obstacles
+                # Перевіряємо, чи Coiin проходить всі перешкоди
                 if all(obstacle.rect.right < Coiin.rect.left for obstacle in obstacles):
                     trausers_visible = True
 
@@ -145,22 +149,25 @@ while run:
                     collisions += 1
                     for obs in obstacles:
                         obs.rect.x = 650 if obs == obstacles[0] else 800 if obs == obstacles[1] else 950 if obs == obstacles[2] else 1110 if obs == obstacles[3] else 1270  
-                    trausers_visible = False  # Hide trausers when a collision happens
+                    trausers_visible = False  # Ховаємо траузери, коли відбувається зіткнення
                     
                     if collisions == 3:
                         game_over = True
 
             if trausers_visible:
-                trausers.draw()  # Draw trausers only when it is visible
+                trausers.draw()  # Малюємо траузери тільки тоді, коли вони видимі
 
-            # Check collision between Coiin and trausers
+            # Перевіряємо зіткнення між Coiin та траузерами
             if trausers_visible and Coiin.rect.colliderect(trausers.rect):
-                                game_win = True
+                game_win = True
 
             draw_text(window, f"Кількість зіткнень: {collisions}/3", 30, 10, 10, (255, 255, 255))
+
+        # Малюємо фігуру, якщо вона існує
+        if figure:
+            figure.draw()
 
     display.update()
     time.delay(17)
 
 quit()
-
